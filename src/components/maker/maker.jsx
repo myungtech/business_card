@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
+import Editor from '../editor/editor';
 import Footer from '../footer/footer';
 import Header from '../header/header';
+import Preview from '../preview/preview';
 import styles from './maker.module.css';
 
 const Maker = ({ authService }) => {
@@ -14,13 +16,17 @@ const Maker = ({ authService }) => {
     useEffect(() => {
         authService.onAuthChange(user => {
             if (!user) {
-                history.push('./');
+                history.push('/');
             }
         })
     })
     return (
         <section className={styles.maker}>
             <Header onLogout={onLogout} />
+            <div className={styles.container}>
+                <Editor />
+                <Preview />
+            </div>
             <Footer />
         </section>
     )
