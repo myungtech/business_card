@@ -1,75 +1,58 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import Editor from '../editor/editor';
 import Footer from '../footer/footer';
 import Header from '../header/header';
+import Editor from '../editor/editor';
 import Preview from '../preview/preview';
 import styles from './maker.module.css';
 
-const Maker = ({ FileInput, authService }) => {
-    const [cards, setCards] = useState({
-        1: {
-            id: '1',
-            name: 'Myung',
-            company: 'JMP Company',
-            theme: 'dark',
-            title: 'Software Engineer',
-            email: 'myungtech@gmail.com',
-            message: 'Shut up And TRY !!!',
-            fileName: 'myungtech',
-            fileURL: null
-        },
-        2: {
-            id: '2',
-            name: 'React',
-            company: 'SPA Company',
-            theme: 'light',
-            title: 'Software Engineer',
-            email: 'myungtech@gmail.com',
-            message: 'Never STOP !!!',
-            fileName: 'myungtech',
-            fileURL: null
-        },
-        3: {
-            id: '3',
-            name: 'HOOKS',
-            company: 'HOOKS Company',
-            theme: 'colorful',
-            title: 'Software Engineer',
-            email: 'myungtech@gmail.com',
-            message: 'You Can Do IT REACT !!!',
-            fileName: 'myungtech',
-            fileURL: null
-        }
-    });
+const Maker = ({ FileInput, authService, cardRepository }) => {
+    const histroyState = useHistory().state;
+    const [cards, setCards] = useState({});
+    const [userId, setUserId] = useState(histroyState && histroyState.id);
 
     const history = useHistory();
     const onLogout = () => {
         authService.logout();
-    }
-
-    // callback함수를 전달해줌
+    };
+    // 마운트 되었을때 사용자의 아이디가 변경 되었을때
+    useEffect(() => {
+        if (!userId) {
+            return;
+        }
+        const stopSync = cardRepository.syncCards(userId, cards => {
+            setCards(cards);
+        });
+        return () => stopSync();
+    }, [userId]);
+    // callback 함수를 전달해줌
     useEffect(() => {
         authService.onAuthChange(user => {
-            if (!user) {
+            if (user) {
+                setUserId(user.uid);
+                console.log(userId);
+            } else {
                 history.push('/');
             }
-        })
+        });
     });
 
-    const createOrUpdateCard = (card) => {
+    const createOrUpdateCard = card => {
         setCards(cards => {
             const updated = { ...cards };
             updated[card.id] = card;
             return updated;
         });
+        cardRepository.saveCard(userId, card);
     };
-    const deleteCard = (card) => {
+
+    const deleteCard = card => {
         setCards(cards => {
             const updated = { ...cards };
             delete updated[card.id];
             return updated;
         });
+        cardRepository.removeCard(userId, card);
     };
 
     return (
@@ -81,7 +64,7 @@ const Maker = ({ FileInput, authService }) => {
                     cards={cards}
                     addCard={createOrUpdateCard}
                     updateCard={createOrUpdateCard}
-                    deleteCared={deleteCard}
+                    deleteCard={deleteCard}
                 />
                 <Preview cards={cards} />
             </div>
