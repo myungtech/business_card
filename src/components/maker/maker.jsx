@@ -15,6 +15,7 @@ const Maker = ({ FileInput, authService, cardRepository }) => {
     const onLogout = () => {
         authService.logout();
     };
+
     // 마운트 되었을때 사용자의 아이디가 변경 되었을때
     useEffect(() => {
         if (!userId) {
@@ -24,18 +25,18 @@ const Maker = ({ FileInput, authService, cardRepository }) => {
             setCards(cards);
         });
         return () => stopSync();
-    }, [userId]);
+    }, [userId, cardRepository]);
+
     // callback 함수를 전달해줌
     useEffect(() => {
         authService.onAuthChange(user => {
             if (user) {
                 setUserId(user.uid);
-                console.log(userId);
             } else {
                 history.push('/');
             }
         });
-    });
+    }, [authService, userId, history]);
 
     const createOrUpdateCard = card => {
         setCards(cards => {
